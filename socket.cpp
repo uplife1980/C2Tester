@@ -31,7 +31,7 @@ void updateEvents(int efd, int fd, int events, int op)
 
 void handleRead(int efd, int fd)
 {
-    char* buf = new char[4096];
+    static char* buf = new char[4096];
     int n = 0;
     struct sockaddr_in fMsgAddr;
     socklen_t addrLen = sizeof(fMsgAddr);

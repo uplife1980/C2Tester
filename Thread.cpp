@@ -19,6 +19,7 @@ void ThreadFactory::makeThread(vector<shared_ptr<thread>> &vecThread)
     LOG_INFO("per is "<< socketPerThread<< " and remain is"<< socketRemain);
     auto itr = m_cfg.m_vecUrl.begin();
     int i = 0;
+    int j = 0;
     //start threads
     for (; i < m_cfg.m_iThreadNum; i++)
     {
@@ -36,7 +37,7 @@ void ThreadFactory::makeThread(vector<shared_ptr<thread>> &vecThread)
                 itr++;
         }
 
-        shared_ptr<thread> pThread(new thread(Thread::ThreadWork, std::ref(m_cfg.m_vecUrl), itrBegin, itr));
+        shared_ptr<thread> pThread(new thread(Thread::ThreadWork, std::ref(m_cfg.m_vecUrl), itrBegin, itr, j++));
         usleep(100*1000);
         vecThread.push_back(pThread);
     }
@@ -69,8 +70,14 @@ ThreadFactory::ThreadFactory()
 }
 
 //end is included
-void Thread::ThreadWork(vector<Endpoint> &vecEndpoint, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end)
+void Thread::ThreadWork(vector<Endpoint> &vecEndpoint, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end, const int cpuNum)
 {
+        			cpu_set_t mask;
+
+				CPU_ZERO(&mask);
+				CPU_SET(cpuNum, &mask);
+				pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);  
+
     int tid = syscall(SYS_gettid);
     
 

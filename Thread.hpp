@@ -22,6 +22,6 @@ class ThreadFactory
 class Thread
 {
     public:
-        static void ThreadWork(vector<Endpoint> &, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end);
+        static void ThreadWork(vector<Endpoint> &, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end, const int);
 };
 #endif
