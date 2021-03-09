@@ -19,6 +19,7 @@ void ThreadFactory::makeThread(vector<shared_ptr<thread>> &vecThread)
     LOG_INFO("per is "<< socketPerThread<< " and remain is"<< socketRemain);
     auto itr = m_cfg.m_vecUrl.begin();
     int i = 0;
+            int j = 0;
     //start threads
     for (; i < m_cfg.m_iThreadNum; i++)
     {
@@ -36,7 +37,7 @@ void ThreadFactory::makeThread(vector<shared_ptr<thread>> &vecThread)
                 itr++;
         }
 
-        shared_ptr<thread> pThread(new thread(Thread::ThreadWork, std::ref(m_cfg.m_vecUrl), itrBegin, itr));
+        shared_ptr<thread> pThread(new thread(Thread::ThreadWork, std::ref(m_cfg.m_vecUrl), itrBegin, itr, j++));
         usleep(100*1000);
         vecThread.push_back(pThread);
     }
@@ -69,31 +70,41 @@ ThreadFactory::ThreadFactory()
 }
 
 //end is included
-void Thread::ThreadWork(vector<Endpoint> &vecEndpoint, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end)
+void Thread::ThreadWork(vector<Endpoint> &vecEndpoint, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end, const int cpuNum)
+{
+    			cpu_set_t mask;
+
+				CPU_ZERO(&mask);
+				CPU_SET(cpuNum, &mask);
+				pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);    
+    shared_ptr<Thread> pThread(new Thread(vecEndpoint, begin, end));
+    pThread->run();
+    
+}
+
+Thread::Thread(vector<Endpoint> &vecEndpoint, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end)
 {
     int tid = syscall(SYS_gettid);
-    
-
-    int epollfd = epoll_create(1);
-    if(epollfd < 0)
-    {
-        LOG_ERROR("epoll create error");
-        exit(0);
-    }
 
     vector<shared_ptr<Socket>> vecSocket;
     //connect socket 
     for(auto itr = begin; itr != end; itr++)
     {
-        shared_ptr<Socket> s(new Socket(*itr));
+        shared_ptr<Socket> s(new Socket(*itr, this));
         vecSocket.push_back(s);
-        updateEvents(epollfd, s->getFD(), EPOLLIN|EPOLLET, EPOLL_CTL_ADD);
+        m_lstCommand.push_back(s);
     }
     LOG_INFO("tid " << tid << " is handling "<< vecSocket.size()<<" sockets.");
-    //loop epoll
-    for (;;)
-    { //实际应用应当注册信号处理函数，退出时清理资源
-        loop_once(epollfd, 10000);
+}
+
+int Thread::run()
+{
+    while(m_lstCommand.size() > 0)
+    {
+        auto com = std::move(m_lstCommand.front());
+        m_lstCommand.pop_front();
+        com->run();
     }
-    
+
+    return 0;
 }

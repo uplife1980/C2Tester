@@ -29,7 +29,7 @@ void updateEvents(int efd, int fd, int events, int op)
     exit_if(r, "epoll_ctl failed");
 }
 
-void handleRead(int efd, int fd)
+bool handleRead(int efd, int fd)
 {
     char* buf = new char[4096];
     int n = 0;
@@ -40,11 +40,12 @@ void handleRead(int efd, int fd)
     {
         //printf("read %d bytes\n", n); 
     }
-    if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-        return;
+    if (n <= 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+        return true;
     exit_if(n < 0, "read error"); //实际应用中，n<0应当检查各类错误，如EINTR
     printf("fd %d closed\n", fd);
     close(fd);
+    return false;
 }
 
 void handleWrite(int efd, int fd)
@@ -55,14 +56,8 @@ void handleWrite(int efd, int fd)
 
 void loop_once(int efd, int maxWaitTime)
 {
-    const int kMaxEvents = 200;
-    struct epoll_event activeEvs[1000];
-    int n = epoll_wait(efd, activeEvs, kMaxEvents, maxWaitTime);
-    //printf("epoll_wait return %d\n", n);
-    for (int i = 0; i < n; i++)
+    /*for (int i = 0; i < n; i++)
     {
-        int fd = activeEvs[i].data.fd;
-        int events = activeEvs[i].events;
         if (events & (EPOLLIN | EPOLLERR))
         {
             handleRead(efd, fd);
@@ -75,10 +70,10 @@ void loop_once(int efd, int maxWaitTime)
         {
             exit_if(1, "unknown event");
         }
-    }
+    }*/
 }
 
-Socket::Socket(const Endpoint &endpoint)
+Socket::Socket(const Endpoint &endpoint, Thread* callerThread): m_callerThread(callerThread), m_iSockfd(0)
 {
     m_iSockfd = socket(AF_INET, SOCK_STREAM, 0);
     
@@ -100,7 +95,7 @@ Socket::Socket(const Endpoint &endpoint)
 
     int bufSize = TCP_BUFFER_SIZE;
     int err = ::setsockopt(m_iSockfd, SOL_SOCKET, SO_RCVBUF, (char *)&bufSize, sizeof(int));
-    setNonBlock(m_iSockfd);
+    
     if (m_iSockfd < 0)
     {
         perror("socket error");
@@ -116,5 +111,16 @@ Socket::Socket(const Endpoint &endpoint)
     strData += "\r\nTransfer-Delay: -4000\r\nIngress-Capacity: 9437184000\r\nConnection: close\r\n\r\n";
 
     ::write(m_iSockfd, strData.c_str(), strData.size());
+    setNonBlock(m_iSockfd);
 }
 
+int Socket::run()
+{
+    bool ret = handleRead(0, this->getFD());
+    if (ret)
+        m_callerThread->addCommand(make_shared<Socket>(*this));
+    else    
+        LOG_ERROR("this socket exits!");
+    
+    return 0;
+}
