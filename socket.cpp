@@ -31,7 +31,7 @@ void updateEvents(int efd, int fd, int events, int op)
 
 void handleRead(int efd, int fd)
 {
-    char* buf = new char[4096];
+    static char* buf = new char[4096];
     int n = 0;
     struct sockaddr_in fMsgAddr;
     socklen_t addrLen = sizeof(fMsgAddr);
@@ -53,29 +53,9 @@ void handleWrite(int efd, int fd)
     updateEvents(efd, fd, EPOLLIN|EPOLLET, EPOLL_CTL_MOD);
 }
 
-void loop_once(int efd, int maxWaitTime)
+void loop_once(fd_set* fds, int maxWaitTime)
 {
-    const int kMaxEvents = 200;
-    struct epoll_event activeEvs[1000];
-    int n = epoll_wait(efd, activeEvs, kMaxEvents, maxWaitTime);
-    //printf("epoll_wait return %d\n", n);
-    for (int i = 0; i < n; i++)
-    {
-        int fd = activeEvs[i].data.fd;
-        int events = activeEvs[i].events;
-        if (events & (EPOLLIN | EPOLLERR))
-        {
-            handleRead(efd, fd);
-        }
-        else if (events & EPOLLOUT)
-        {
-            handleWrite(efd, fd);
-        }
-        else
-        {
-            exit_if(1, "unknown event");
-        }
-    }
+
 }
 
 Socket::Socket(const Endpoint &endpoint)
@@ -100,7 +80,7 @@ Socket::Socket(const Endpoint &endpoint)
 
     int bufSize = TCP_BUFFER_SIZE;
     int err = ::setsockopt(m_iSockfd, SOL_SOCKET, SO_RCVBUF, (char *)&bufSize, sizeof(int));
-    setNonBlock(m_iSockfd);
+    
     if (m_iSockfd < 0)
     {
         perror("socket error");
@@ -116,5 +96,6 @@ Socket::Socket(const Endpoint &endpoint)
     strData += "\r\nTransfer-Delay: -4000\r\nIngress-Capacity: 9437184000\r\nConnection: close\r\n\r\n";
 
     ::write(m_iSockfd, strData.c_str(), strData.size());
+    setNonBlock(m_iSockfd);
 }
 

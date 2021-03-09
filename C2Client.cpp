@@ -17,8 +17,10 @@ int main()
 
     threadFacory->startThreadFactory(cfg);
 
+    int iCpuNum = 0;
+
     vector<shared_ptr<thread>> vecThread;
-    threadFacory->makeThread(vecThread);
+    threadFacory->makeThread(vecThread, iCpuNum++);
 
     return 0;
 }

@@ -3,6 +3,8 @@
 
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include <sys/select.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -13,8 +15,9 @@
 #include "common.hpp"
 
 #define TCP_BUFFER_SIZE (64 * 1024)
-void loop_once(int efd, int maxWaitTime);
+void loop_once(fd_set* fds, int maxWaitTime);
 void updateEvents(int efd, int fd, int events, int op) ;
+void handleRead(int efd, int fd);
 class Socket
 {
 public:
