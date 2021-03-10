@@ -109,7 +109,7 @@ Socket::Socket(const Endpoint &endpoint)
 
     string strData("GET "+endpoint.strOtherPara+" HTTP/1.1\r\n");
     string rn("\r\n");
-    strData += "Range: bytes=0-\r\nUser-Agent: Suma Streaming Server\r\nHost: ";
+    strData += "Range: bytes=0-\r\nUser-Agent: Samba Streaming Server\r\nHost: ";
     strData += endpoint.strAddr;
     strData += ":";
     strData +=endpoint.strPort;
