@@ -36,13 +36,14 @@ bool handleRead(int efd, int fd)
     struct sockaddr_in fMsgAddr;
     socklen_t addrLen = sizeof(fMsgAddr);
     memset(&fMsgAddr, 0, addrLen);
-    while ((n = ::recvfrom(fd, buf, sizeof(buf), 0, (sockaddr *)&fMsgAddr, &addrLen)) > 0)
+    while ((n = ::recvfrom(fd, buf, 4096, 0, (sockaddr *)&fMsgAddr, &addrLen)) > 0)
     {
         //printf("read %d bytes\n", n); 
     }
+     //usleep(1000);
     if (n <= 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
     {
-        usleep(1000);
+       
         return true;
 
     }

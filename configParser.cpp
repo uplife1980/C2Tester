@@ -35,11 +35,20 @@ bool configParser::parse(config &Config)
         Endpoint endpoint;
         while(!fs.eof() && fs.good())
         {
-            fs >> strTempUrl;
+            //fs >> strTempUrl;
+            char buffer[1024];
+            fs.getline(buffer, 1024);
+            strTempUrl = buffer;
+
+            if(strTempUrl.size() == 0)
+            {
+                continue;
+            }
             if(!basefw::string2EndpointPara(strTempUrl, endpoint))
             {
                 continue;
             }
+            
             Config.m_vecUrl.push_back(endpoint);
             LOG_INFO("endpoint: "<< endpoint.strAddr<<" port: "<< endpoint.strPort<<" other para is : "<<endpoint.strOtherPara);
         }

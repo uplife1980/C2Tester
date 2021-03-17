@@ -26,7 +26,7 @@ void ThreadFactory::makeThread(vector<shared_ptr<thread>> &vecThread)
         auto itrBegin = itr;
 
         //iterate to find last socket that this thread needs.
-        if (i < socketRemain)
+        if (i < socketRemain)       //把不能均分的任务，给前面的线程一个线程分发一个
         {
             for (auto j = 0; j < socketPerThread; j++)
                 itr++;
@@ -72,11 +72,11 @@ ThreadFactory::ThreadFactory()
 //end is included
 void Thread::ThreadWork(vector<Endpoint> &vecEndpoint, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end, const int cpuNum)
 {
-    			cpu_set_t mask;
+    			//cpu_set_t mask;
 
-				CPU_ZERO(&mask);
-				CPU_SET(cpuNum, &mask);
-				pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);    
+				//CPU_ZERO(&mask);
+				//CPU_SET(cpuNum, &mask);
+				//pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);    
     shared_ptr<Thread> pThread(new Thread(vecEndpoint, begin, end));
     pThread->run();
     
