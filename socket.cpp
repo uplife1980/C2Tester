@@ -31,7 +31,7 @@ void updateEvents(int efd, int fd, int events, int op)
 
 bool handleRead(int efd, int fd)
 {
-    char* buf = new char[4096];
+    static char* buf = new char[4096];
     int n = 0;
     struct sockaddr_in fMsgAddr;
     socklen_t addrLen = sizeof(fMsgAddr);
@@ -41,7 +41,12 @@ bool handleRead(int efd, int fd)
         //printf("read %d bytes\n", n); 
     }
     if (n <= 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+    {
+        usleep(1000);
         return true;
+
+    }
+        
     exit_if(n < 0, "read error"); //实际应用中，n<0应当检查各类错误，如EINTR
     printf("fd %d closed\n", fd);
     close(fd);
