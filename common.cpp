@@ -85,6 +85,5 @@ namespace basefw{
         endpoint.strOtherPara = GetKeyValue(src, strAddrAndPort, "");
         return true;
     }
-
     
 }

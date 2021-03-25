@@ -82,8 +82,6 @@ void loop_once(int efd, int maxWaitTime)
 Socket::Socket(const Endpoint &endpoint, Thread* callerThread): m_callerThread(callerThread), m_iSockfd(0)
 {
     m_iSockfd = socket(AF_INET, SOCK_STREAM, 0);
-    
-
 
     struct sockaddr_in serveraddr;
     memset(&serveraddr, 0, sizeof(serveraddr));
@@ -122,6 +120,8 @@ Socket::Socket(const Endpoint &endpoint, Thread* callerThread): m_callerThread(c
 
 int Socket::run()
 {
+    // m_sleepPerPolling.excute();    
+
     bool ret = handleRead(0, this->getFD());
     if (ret)
         m_callerThread->addCommand(make_shared<Socket>(*this));

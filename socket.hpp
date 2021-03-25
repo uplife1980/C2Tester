@@ -10,8 +10,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <cstring>
+#include <chrono>
 #include "common.hpp"
 #include "Thread.hpp"
+#include "StrategeToThread.hpp"
 
 #define TCP_BUFFER_SIZE (64 * 1024)
 
@@ -32,5 +34,13 @@ public:
 private:
     int m_iSockfd;
     Thread* m_callerThread;
+
+    // bool beginflag;
+    // std::chrono::high_resolution_clock::time_point lasttime;
+    // std::chrono::high_resolution_clock::time_point curtime;
+    // std::chrono::high_resolution_clock::time_point begintime;
+
+    SleepPerPolling m_sleepPerPolling;
+
 };
 #endif

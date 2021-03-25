@@ -6,6 +6,7 @@
 #include "socket.hpp"
 #include <ctime>
 
+
 void ThreadFactory::startThreadFactory(const config& cfg)
 {
     m_cfg = cfg;
@@ -72,11 +73,11 @@ ThreadFactory::ThreadFactory()
 //end is included
 void Thread::ThreadWork(vector<Endpoint> &vecEndpoint, const vector<Endpoint>::iterator begin, const vector<Endpoint>::iterator end, const int cpuNum)
 {
-    			//cpu_set_t mask;
+    cpu_set_t mask;
 
-				//CPU_ZERO(&mask);
-				//CPU_SET(cpuNum, &mask);
-				//pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);    
+    CPU_ZERO(&mask);
+    CPU_SET(cpuNum, &mask);
+    pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);    
     shared_ptr<Thread> pThread(new Thread(vecEndpoint, begin, end));
     pThread->run();
     
@@ -98,12 +99,24 @@ Thread::Thread(vector<Endpoint> &vecEndpoint, const vector<Endpoint>::iterator b
 }
 
 int Thread::run()
-{
+{   
+    // int counterInAPolling = 1;
+
+    // SleepPerPolling sleepPerPolling;
+
     while(m_lstCommand.size() > 0)
-    {
+    {   
+    
         auto com = std::move(m_lstCommand.front());
         m_lstCommand.pop_front();
         com->run();
+
+        // if(counterInAPolling == m_lstCommand.size()){
+        //     counterInAPolling = 0;          //一个轮询结束，重新计数
+        //     sleepPerPolling.excute();
+        // }
+
+        // ++counterInAPolling;
     }
 
     return 0;
